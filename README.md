@@ -14,6 +14,7 @@ cargo test --workspace --features omarchy-theme/json
 ./tests/check-c.sh                    # C ABI + header smoke test
 ./examples/imgui-cpp/build.sh test    # real ImGui, runtime assertions
 ./examples/odin-abi/check.sh          # Odin bindings ≡ Rust CLI
+./tests/check-zig.sh                  # Zig: native resolver ≡ vectors + zgui applies live
 ```
 
 ## Choose your integration
@@ -26,7 +27,8 @@ cargo test --workspace --features omarchy-theme/json
 | Rust egui | `omarchy-theme` core + adapter (planned v0.2) | — |
 | Rust iced | [`crates/omarchy-theme-iced`](crates/omarchy-theme-iced) | `subscription()` |
 | raylib (C or Odin) | [`bindings/raylib/omarchy_raylib.h`](bindings/raylib/omarchy_raylib.h) | `omarchy_rl_update(&t)` per frame |
-| Zig / Go / C# / anything with C FFI | [`bindings/c/omarchy_theme.h`](bindings/c/omarchy_theme.h) → cdylib | `omarchy_theme_changed()` |
+| Zig (zgui / Dear ImGui validated) | [`bindings/zig/omarchy_theme.zig`](bindings/zig/omarchy_theme.zig) — pure extern POD, or native loader | `ot.changed()` per frame |
+| Go / C# / anything else with C FFI | [`bindings/c/omarchy_theme.h`](bindings/c/omarchy_theme.h) → cdylib | `omarchy_theme_changed()` |
 | Webview / Tauri / config-file app | `omarchy-theme export` + [`hook/omarchy-theme-gen`](hook/omarchy-theme-gen) | file regeneration |
 | You want NO dependency at all | [`docs/contract.md`](docs/contract.md) — ~100-line loader, vectors prove it | your own poll |
 
@@ -114,12 +116,13 @@ crates/
   omarchy-theme-iced/    iced adapter (to_theme + subscription)
 bindings/
   c/omarchy_theme.h      frozen ABI v1: size 1560, colors@88, style@344
+  zig/omarchy_theme.zig  pure-Zig extern bindings (comptime layout asserts)
   odin/omarchy_theme/    Odin bindings (foreign + friendly API)
   raylib/omarchy_raylib.h  raylib conversions over the POD struct
 include/omarchy/imgui.hpp  header-only Dear ImGui runtime adapter
 hook/omarchy-theme-gen   theme-set.d example regenerating export files
-examples/                imgui-cpp · odin-abi · odin-conformance ·
-                         schema-spelunker (native recipe) · raylib-c
+examples/                imgui-cpp · odin-abi · odin-conformance · zgui-verify ·
+                         zig-conformance · schema-spelunker (native recipe) · raylib-c
 tests/                   parity + ABI + smoke harnesses
 ```
 

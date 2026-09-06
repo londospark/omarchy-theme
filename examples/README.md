@@ -7,6 +7,8 @@
 | `odin-conformance/` | Odin | pure-contract resolver verified against all conformance vectors (the oracle test for a from-scratch loader) |
 | `schema-spelunker/` | Odin | PR-ready native bridge for londospark/Schema-Spelunker (see `docs/recipes/schema-spelunker.md`) |
 | `raylib-c/` | C | compile-checked with vendored raylib headers (`cc -fsyntax-only`); linkable with a system raylib |
+| `zgui-verify/` | Zig | initializes a real **zgui** (Dear ImGui) context, applies "mapping v1" from the C ABI bindings, asserts applied colors == live palette |
+| `zig-conformance/` | Zig | pure-contract resolver (like odin-conformance), checked against all vectors via `zig run`/`build-exe` |
 
 Shared headers live in `build/` after vendoring (git-ignored):
 
@@ -29,4 +31,5 @@ cargo test --workspace --features omarchy-theme/json
 ./tests/check-c.sh              # C ABI runtime + layout asserts
 ./examples/odin-abi/check.sh    # Odin bindings ≡ Rust CLI
 ./examples/imgui-cpp/build.sh test
+./tests/check-zig.sh              # zig >= 0.16; zgui fetched via zig pkg manager
 ```

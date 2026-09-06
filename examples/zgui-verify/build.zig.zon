@@ -1,0 +1,13 @@
+.{
+    .name = .omarchy_zgui_verify,
+    .version = "0.1.0",
+    .fingerprint = 0x4aebff4f11d6d900,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .zgui = .{
+            .url = "git+https://github.com/zig-gamedev/zgui?ref=main#0b468ccdc30d85f7fe72308791f2583344b62103",
+            .hash = "zgui-0.6.0-dev--L6sZCtHbgC6H4Y4LaZUaRYqouHWdeOpHmLhm4OHYiKz",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}
