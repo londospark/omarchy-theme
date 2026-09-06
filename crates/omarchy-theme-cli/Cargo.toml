@@ -1,0 +1,18 @@
+[package]
+name = "omarchy-theme-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Export Omarchy themes for any toolkit: JSON/CSS/TOML/C-header manifests, live-watch runner, and theme-set hook integration"
+keywords = ["omarchy", "theme", "cli", "export"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "omarchy-theme"
+path = "src/main.rs"
+
+[dependencies]
+omarchy-theme = { workspace = true, features = ["json"] }
+clap = { version = "4", features = ["derive"] }
+serde_json = { workspace = true }

@@ -1,0 +1,13 @@
+[package]
+name = "omarchy-theme-abi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "C ABI for the omarchy-theme resolver: POD theme struct + poll-based change detection for polyglot apps (Odin, Zig, C, C#, ...)"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+omarchy-theme = { workspace = true }

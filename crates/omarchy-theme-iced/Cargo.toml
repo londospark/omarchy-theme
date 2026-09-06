@@ -1,0 +1,16 @@
+[package]
+name = "omarchy-theme-iced"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Iced adapter for omarchy-theme: iced Theme mapping and an iced Subscription for live theme changes"
+
+[dependencies]
+omarchy-theme = { workspace = true }
+futures = "0.3"
+inotify = "0.10"
+iced = { version = "0.13", default-features = false }
+
+[dev-dependencies]
+iced = { version = "0.13", features = ["tokio", "tiny-skia"] }
