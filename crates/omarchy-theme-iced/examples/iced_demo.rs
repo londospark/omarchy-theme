@@ -49,7 +49,14 @@ impl App {
             Some(t) => to_theme(t),
             None => Theme::CatppuccinMocha, // graceful off-desktop default
         };
-        ((Self { count: 0, theme_name, theme }), Task::none())
+        (
+            (Self {
+                count: 0,
+                theme_name,
+                theme,
+            }),
+            Task::none(),
+        )
     }
 
     fn theme(&self) -> Theme {

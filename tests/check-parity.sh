@@ -14,10 +14,11 @@ g++ -std=c++17 -Iinclude -Ibuild/imgui-vendor -o build/cpp-parity tests/cpp-pari
 fail=0
 for vec in conformance/vectors/*.json; do
   slug=$(python3 -c "import json,sys;print(json.load(open('$vec'))['theme'])")
-  src=$(python3 -c "import json,sys;print(json.load(open('$vec'))['colors_file'])")
+  slug=$(basename "$vec" .json)
+  src="conformance/vectors/$slug.colors.toml"
+  [[ -f $src ]] || src=$(python3 -c "import json,sys;print(json.load(open('$vec'))['colors_file'])")
   marker=$(python3 -c "import json,sys;print('light' if json.load(open('$vec'))['light_mode_marker'] else '')")
-  [[ -f $src ]] || { echo "skip $slug (source colors.toml gone)"; continue; }
-
+  [[ -f $src ]] || { echo "skip $slug (no colors source)"; continue; }
   python3 -c "
 import json
 v = json.load(open('$vec'))['resolved']

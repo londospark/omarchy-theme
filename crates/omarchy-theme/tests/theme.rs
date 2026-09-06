@@ -12,7 +12,8 @@ struct TempState {
 
 impl TempState {
     fn new(tag: &str) -> TempState {
-        let dir = std::env::temp_dir().join(format!("omarchy-theme-test-{tag}-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("omarchy-theme-test-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(dir.join("theme")).unwrap();
         TempState { dir }
@@ -59,7 +60,11 @@ fn loads_and_reads_style() {
 #[test]
 fn change_detection_survives_atomic_swap() {
     let state = TempState::new("swap");
-    state.write_theme("background = #111111\nforeground = #eee\naccent = #ff0000\n", None, "one");
+    state.write_theme(
+        "background = #111111\nforeground = #eee\naccent = #ff0000\n",
+        None,
+        "one",
+    );
 
     let theme = Theme::from_state_dir(&state.dir).unwrap();
     assert!(!theme.changed());
@@ -68,7 +73,11 @@ fn change_detection_survives_atomic_swap() {
     let staging = state.dir.join("next");
     fs::create_dir_all(staging.join("theme")).unwrap();
     fs::write(staging.join("theme.name"), "two\n").unwrap();
-    fs::write(staging.join("theme/colors.toml"), "background = #111111\nforeground = #eee\naccent = #0000ff\n").unwrap();
+    fs::write(
+        staging.join("theme/colors.toml"),
+        "background = #111111\nforeground = #eee\naccent = #0000ff\n",
+    )
+    .unwrap();
 
     // signature not yet affected
     assert!(!theme.changed());
@@ -77,9 +86,17 @@ fn change_detection_survives_atomic_swap() {
     // rename-into-place ordering like the real script)
     let graveyard = state.dir.join("graveyard");
     fs::rename(state.dir.join("theme"), &graveyard).unwrap();
-    fs::rename(staging.join("theme.name"), state.dir.join("theme.name.next")).unwrap();
+    fs::rename(
+        staging.join("theme.name"),
+        state.dir.join("theme.name.next"),
+    )
+    .unwrap();
     fs::rename(staging.join("theme"), state.dir.join("theme")).unwrap();
-    fs::rename(&state.dir.join("theme.name.next"), state.dir.join("theme.name")).unwrap();
+    fs::rename(
+        &state.dir.join("theme.name.next"),
+        state.dir.join("theme.name"),
+    )
+    .unwrap();
     let _ = fs::remove_dir_all(&graveyard);
 
     assert!(theme.changed(), "swap must be observable");
@@ -130,4 +147,3 @@ fn live_desktop_smoke() {
         Err(e) => panic!("unexpected live-theme error: {e}"),
     }
 }
-

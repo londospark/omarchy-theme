@@ -59,7 +59,10 @@ pub fn mapping(m: &Manifest) -> Vec<(&'static str, [f32; 4])> {
         ("TextDisabled", f4(dfg)),
         ("WindowBg", f4(bg.with_alpha(window_alpha(m)))),
         ("ChildBg", [0.0, 0.0, 0.0, 0.0]),
-        ("PopupBg", f4(col(m, "background").with_alpha(popup_alpha(m)))),
+        (
+            "PopupBg",
+            f4(col(m, "background").with_alpha(popup_alpha(m))),
+        ),
         ("Border", f4(muted)),
         ("BorderShadow", [0.0, 0.0, 0.0, 0.0]),
         ("FrameBg", f4(frame)),

@@ -35,6 +35,9 @@ emit() {
   local json="$OUT/$slug.json"
   local marker=false
   [[ -f $(dirname "$file")/light.mode ]] && marker=true
+  # self-contained sidecar: the exact source colors.toml, so vectors verify
+  # on machines without Omarchy (CI) and never drift from the live tree
+  cp "$file" "$OUT/$slug.colors.toml"
 
   {
     printf '{\n  "theme": "%s",\n' "$slug"

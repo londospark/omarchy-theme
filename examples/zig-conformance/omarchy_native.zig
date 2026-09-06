@@ -251,6 +251,11 @@ fn readFileText(io: std.Io, alloc: std.mem.Allocator, path: []const u8) ![]u8 {
     return buf[0..n];
 }
 
+fn resolveText(alloc: std.mem.Allocator, p: *Map, text: []const u8, marker: bool) !void {
+    try parseColors(alloc, p, text);
+    try resolvePalette(alloc, p, marker);
+}
+
 fn stateDirPath(alloc: std.mem.Allocator, env: *const std.process.Environ.Map) ![]const u8 {
     const base: []const u8 = blk: {
         if (env.get("XDG_STATE_HOME")) |s| {
@@ -274,8 +279,7 @@ fn loadResolved(io: std.Io, alloc: std.mem.Allocator, p: *Map, colors_path: []co
         marker = true;
     } else |_| {}
 
-    try parseColors(alloc, p, text);
-    try resolvePalette(alloc, p, marker);
+    try resolveText(alloc, p, text, marker);
     return true;
 }
 
@@ -348,12 +352,20 @@ fn conformance(io: std.Io, alloc: std.mem.Allocator, dir_path: []const u8) !u8 {
             }
         }
 
+        // Sidecar colors are the committed, machine-independent truth; the
+        // original absolute path is a fallback for pre-sidecar vectors.
         var p = Map.init(alloc);
-        const loaded = loadResolved(io, alloc, &p, cf) catch false;
-        if (!loaded) {
+        const sidecar = try std.fmt.allocPrint(alloc, "{s}/{s}.colors.toml", .{ dir_path, theme });
+        const src_text = readFileText(io, alloc, sidecar) catch
+            readFileText(io, alloc, cf) catch {
             try out.print(alloc, "skip {s} (source gone)\n", .{theme});
             continue;
-        }
+        };
+        resolveText(alloc, &p, src_text, marker) catch {
+            try out.print(alloc, "skip {s} (unresolvable)\n", .{theme});
+            continue;
+        };
+
         var mismatches: usize = 0;
         var rit2 = resolved.iterator();
         while (rit2.next()) |kv| {

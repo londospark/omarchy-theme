@@ -27,7 +27,10 @@ impl Palette {
     /// `colors.toml`; it is only consulted when neither `mode` nor the legacy
     /// `theme_type` key is present.
     pub fn resolve(raw: &str, has_light_mode_marker: bool) -> Palette {
-        let mut p = Palette { entries: parse_colors_text(raw), mode: Mode::Dark };
+        let mut p = Palette {
+            entries: parse_colors_text(raw),
+            mode: Mode::Dark,
+        };
         p.resolve_cascade(has_light_mode_marker);
         p
     }
@@ -306,8 +309,15 @@ impl Palette {
 }
 
 fn resolve_mode(palette: &Palette, has_light_mode_marker: bool) -> Mode {
-    if let Some(m) = palette.get_raw("mode").or_else(|| palette.get_raw("theme_type")) {
-        return if m == "light" { Mode::Light } else { Mode::Dark };
+    if let Some(m) = palette
+        .get_raw("mode")
+        .or_else(|| palette.get_raw("theme_type"))
+    {
+        return if m == "light" {
+            Mode::Light
+        } else {
+            Mode::Dark
+        };
     }
     if has_light_mode_marker {
         return Mode::Light;
@@ -318,7 +328,11 @@ fn resolve_mode(palette: &Palette, has_light_mode_marker: bool) -> Mode {
         if bytes.len() == 7 && bytes[0] == b'#' && bytes[1..].iter().all(|c| c.is_ascii_hexdigit())
         {
             if let Some(c) = Rgba::parse(bg) {
-                return if c.is_light_by_omarchy() { Mode::Light } else { Mode::Dark };
+                return if c.is_light_by_omarchy() {
+                    Mode::Light
+                } else {
+                    Mode::Dark
+                };
             }
         }
     }
@@ -331,10 +345,15 @@ fn parse_colors_text(raw: &str) -> BTreeMap<String, String> {
     let mut map = BTreeMap::new();
     for line in raw.lines() {
         // IFS='=' read -r key value: split once on the first '='.
-        let Some((key, value)) = line.split_once('=') else { continue };
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
 
         // strip all quote and space characters from the key
-        let key: String = key.chars().filter(|c| *c != '"' && *c != '\'' && *c != ' ').collect();
+        let key: String = key
+            .chars()
+            .filter(|c| *c != '"' && *c != '\'' && *c != ' ')
+            .collect();
         if key.is_empty() || key.starts_with('#') {
             continue;
         }
@@ -342,7 +361,9 @@ fn parse_colors_text(raw: &str) -> BTreeMap<String, String> {
         let value = extract_value(value);
 
         let key_ok = !key.is_empty()
-            && key.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-');
+            && key
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-');
         if !key_ok {
             continue;
         }
@@ -350,7 +371,10 @@ fn parse_colors_text(raw: &str) -> BTreeMap<String, String> {
         // enough for hex, rgb()/rgba(), gradients, angles, and bare words.
         let value_ok = value.bytes().all(|c| {
             c.is_ascii_alphanumeric()
-                || matches!(c, b'#' | b'(' | b')' | b',' | b'.' | b'_' | b'+' | b'/' | b'%' | b' ' | b'-')
+                || matches!(
+                    c,
+                    b'#' | b'(' | b')' | b',' | b'.' | b'_' | b'+' | b'/' | b'%' | b' ' | b'-'
+                )
         });
         if !value_ok {
             continue;
@@ -411,7 +435,10 @@ mod tests {
 
     #[test]
     fn derived_shades_match_oracle_arithmetic() {
-        let p = Palette::resolve("background = #1e1e2e\nforeground = #cdd6f4\nred = #f38ba8\n", false);
+        let p = Palette::resolve(
+            "background = #1e1e2e\nforeground = #cdd6f4\nred = #f38ba8\n",
+            false,
+        );
         assert_eq!(p.get("dark_background"), Some("#171723"));
         assert_eq!(p.get("darker_background"), Some("#0f0f17"));
         assert_eq!(p.get("bright_red"), Some("#f5a2b9")); // mix(red, white, 20%)

@@ -308,6 +308,13 @@ state_dir :: proc() -> string {
 	return strings.concatenate({h, "/.local/state/omarchy/current"}, context.temp_allocator)
 }
 
+resolve_text :: proc(text: string, marker: bool) -> Palette {
+	p := make(Palette)
+	parse_colors(text, &p)
+	resolve_palette(&p, marker)
+	return p
+}
+
 load_and_resolve :: proc(path: string) -> (Palette, bool) {
 	text, err := os.read_entire_file(path, context.allocator)
 	if err != os.ERROR_NONE {
@@ -323,10 +330,7 @@ load_and_resolve :: proc(path: string) -> (Palette, bool) {
 		os.close(probe)
 		marker = true
 	}
-	p := make(Palette)
-	parse_colors(string(text), &p)
-	resolve_palette(&p, marker)
-	return p, true
+	return resolve_text(string(text), marker), true
 }
 
 Vector :: struct {
@@ -378,11 +382,18 @@ conformance_main :: proc() {
 			os.exit(1)
 		}
 		delete(data, context.allocator)
-		p, ok := load_and_resolve(v.colors_file)
-		if !ok {
-			fmt.printf("skip {} (source gone)\n", v.theme)
-			continue
+		// sidecar colors are the committed, machine-independent truth
+		src := strings.concatenate({args[2], "/", v.theme, ".colors.toml"}, context.temp_allocator)
+		src_text, serr := os.read_entire_file(src, context.allocator)
+		if serr != os.ERROR_NONE {
+			src_text, serr = os.read_entire_file(v.colors_file, context.allocator)
+			if serr != os.ERROR_NONE {
+				fmt.printf("skip {} (source gone)\n", v.theme)
+				continue
+			}
 		}
+		p := resolve_text(string(src_text), v.light_mode_marker)
+		defer delete(src_text, context.allocator)
 		mismatches := 0
 		for k, want in v.resolved {
 			got := lookup(&p, k)

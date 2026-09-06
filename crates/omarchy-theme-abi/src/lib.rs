@@ -193,10 +193,22 @@ fn fill(out: &mut OmarchyTheme, theme: &Theme) {
     put(OMS_SELECTION_FILL_ALPHA, st.selection_fill_alpha);
     put(OMS_SPACING_SCALE, st.spacing_scale);
     put(OMS_FONT_BASE_SIZE, st.font_base_size);
-    put(OMS_MENU_BG_ALPHA, st.menu.map(|s| s.background_alpha).unwrap_or(nan));
-    put(OMS_POPUP_BG_ALPHA, st.popup.map(|s| s.background_alpha).unwrap_or(nan));
-    put(OMS_TOOLTIP_BG_ALPHA, st.tooltip.map(|s| s.background_alpha).unwrap_or(nan));
-    put(OMS_SCRIM_ALPHA, st.menu.map(|s| s.scrim_alpha).unwrap_or(nan));
+    put(
+        OMS_MENU_BG_ALPHA,
+        st.menu.map(|s| s.background_alpha).unwrap_or(nan),
+    );
+    put(
+        OMS_POPUP_BG_ALPHA,
+        st.popup.map(|s| s.background_alpha).unwrap_or(nan),
+    );
+    put(
+        OMS_TOOLTIP_BG_ALPHA,
+        st.tooltip.map(|s| s.background_alpha).unwrap_or(nan),
+    );
+    put(
+        OMS_SCRIM_ALPHA,
+        st.menu.map(|s| s.scrim_alpha).unwrap_or(nan),
+    );
 
     out.has_font = 0;
     copy_str(&mut out.font_family, "");
@@ -204,7 +216,14 @@ fn fill(out: &mut OmarchyTheme, theme: &Theme) {
     if let Some(font) = &theme.font {
         out.has_font = 1;
         copy_str(&mut out.font_family, &font.family);
-        copy_str(&mut out.font_path, &font.file.as_ref().map(|p| p.display().to_string()).unwrap_or_default());
+        copy_str(
+            &mut out.font_path,
+            &font
+                .file
+                .as_ref()
+                .map(|p| p.display().to_string())
+                .unwrap_or_default(),
+        );
     }
     out.has_background = 0;
     copy_str(&mut out.background_path, "");
@@ -220,11 +239,18 @@ fn load_into(out: &mut OmarchyTheme) -> i32 {
         Err(omarchy_theme::Error::NoTheme) => return -2,
         Err(_) => return -1,
     };
-    let entries: Vec<(String, String)> =
-        theme.palette.entries().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+    let entries: Vec<(String, String)> = theme
+        .palette
+        .entries()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
     let signature = theme.signature().clone();
     fill(out, &theme);
-    *cache().lock().unwrap() = Some(Cache { theme, entries, signature });
+    *cache().lock().unwrap() = Some(Cache {
+        theme,
+        entries,
+        signature,
+    });
     0
 }
 
@@ -248,7 +274,8 @@ pub extern "C" fn omarchy_theme_abi_version() -> u32 {
 #[no_mangle]
 pub extern "C" fn omarchy_theme_version() -> *const c_char {
     static V: OnceLock<std::ffi::CString> = OnceLock::new();
-    V.get_or_init(|| std::ffi::CString::new(omarchy_theme::VERSION).unwrap()).as_ptr()
+    V.get_or_init(|| std::ffi::CString::new(omarchy_theme::VERSION).unwrap())
+        .as_ptr()
 }
 
 /// Load the current theme into `out`. The caller must have set
@@ -256,6 +283,10 @@ pub extern "C" fn omarchy_theme_version() -> *const c_char {
 /// it knows (forward compatible: newer lib + older header works).
 ///
 /// Returns `OMARCHY_OK` or a negative error code.
+///
+/// # Safety
+/// `out` must be null or point to a writable `OmarchyTheme` whose
+/// `abi_size` field was initialized by the caller (per the C header).
 #[no_mangle]
 pub unsafe extern "C" fn omarchy_theme_load(out: *mut OmarchyTheme) -> i32 {
     if out.is_null() {
@@ -315,14 +346,26 @@ pub extern "C" fn omarchy_theme_changed() -> i32 {
 /// Resolved palette value (raw string: `#rrggbb`, gradients, ...) for a
 /// key of the last loaded theme. Copies NUL-terminated output; returns the
 /// length excluding NUL, or OMARCHY_ERR_* when missing/short buffer.
+///
+/// # Safety
+/// `key` must be a valid NUL-terminated string; `out` must be writable for
+/// at least `out_len` bytes.
 #[no_mangle]
-pub unsafe extern "C" fn omarchy_theme_get(key: *const c_char, out: *mut c_char, out_len: u32) -> i32 {
+pub unsafe extern "C" fn omarchy_theme_get(
+    key: *const c_char,
+    out: *mut c_char,
+    out_len: u32,
+) -> i32 {
     if key.is_null() || out.is_null() || out_len == 0 {
         return OMARCHY_ERR_ARG;
     }
-    let Ok(key) = CStr::from_ptr(key).to_str() else { return OMARCHY_ERR_ARG };
+    let Ok(key) = CStr::from_ptr(key).to_str() else {
+        return OMARCHY_ERR_ARG;
+    };
     let guard = cache().lock().unwrap();
-    let Some(entry) = guard.as_ref() else { return OMARCHY_ERR };
+    let Some(entry) = guard.as_ref() else {
+        return OMARCHY_ERR;
+    };
     let Some((_, value)) = entry.entries.iter().find(|(k, _)| k == key) else {
         return OMARCHY_ERR;
     };
@@ -337,11 +380,20 @@ pub unsafe extern "C" fn omarchy_theme_get(key: *const c_char, out: *mut c_char,
 /// loaded).
 #[no_mangle]
 pub extern "C" fn omarchy_theme_entry_count() -> u32 {
-    cache().lock().unwrap().as_ref().map(|c| c.entries.len() as u32).unwrap_or(0)
+    cache()
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|c| c.entries.len() as u32)
+        .unwrap_or(0)
 }
 
 /// Copy the `index`-th resolved palette entry (sorted by key). Returns the
 /// value length excluding NUL, or a negative error.
+///
+/// # Safety
+/// `key`/`value` must be writable buffers of at least `key_len`/`value_len`
+/// bytes respectively.
 #[no_mangle]
 pub unsafe extern "C" fn omarchy_theme_entry(
     index: u32,
@@ -354,8 +406,12 @@ pub unsafe extern "C" fn omarchy_theme_entry(
         return OMARCHY_ERR_ARG;
     }
     let guard = cache().lock().unwrap();
-    let Some(entry) = guard.as_ref() else { return OMARCHY_ERR };
-    let Some((k, v)) = entry.entries.get(index as usize) else { return OMARCHY_ERR_ARG };
+    let Some(entry) = guard.as_ref() else {
+        return OMARCHY_ERR;
+    };
+    let Some((k, v)) = entry.entries.get(index as usize) else {
+        return OMARCHY_ERR_ARG;
+    };
     if k.len() + 1 > key_len as usize || v.len() + 1 > value_len as usize {
         return OMARCHY_ERR_ARG;
     }
@@ -409,13 +465,14 @@ mod tests {
             Rgba::from_u32(t.colors[OMC_ACCENT]),
             theme.palette.color("accent").unwrap(),
         );
-        let name = unsafe { CStr::from_ptr(t.theme_name.as_ptr()) }.to_str().unwrap();
+        let name = unsafe { CStr::from_ptr(t.theme_name.as_ptr()) }
+            .to_str()
+            .unwrap();
         assert_eq!(name, theme.name.as_deref().unwrap_or(""));
         // get() consults the global cache filled by the load above
         let mut buf = [0i8; 64];
-        let n = unsafe {
-            omarchy_theme_get(b"bg\0".as_ptr() as *const c_char, buf.as_mut_ptr(), 64)
-        };
+        let n =
+            unsafe { omarchy_theme_get(b"bg\0".as_ptr() as *const c_char, buf.as_mut_ptr(), 64) };
         assert!(n > 0);
     }
 

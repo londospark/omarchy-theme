@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use omarchy_theme::{Theme, ThemeWatcher};
 
-fn theme_text(name: &str, accent: &str) -> String {
+fn theme_text(_name: &str, accent: &str) -> String {
     format!("mode = \"dark\"\nbackground = #111111\nforeground = #eeeeee\naccent = {accent}\nselection = #292e42\n")
 }
 

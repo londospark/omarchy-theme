@@ -78,12 +78,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("{slug}");
             }
         }
-        Command::Export { format, theme: Some(slug), out } => {
+        Command::Export {
+            format,
+            theme: Some(slug),
+            out,
+        } => {
             let source = omarchy_theme::find_theme(&slug).ok_or("theme not found")?;
             let manifest = export::Manifest::from_theme(&source.load()?);
             write(out, render(format, &manifest)?)?;
         }
-        Command::Export { format, theme: None, out } => {
+        Command::Export {
+            format,
+            theme: None,
+            out,
+        } => {
             let theme = Theme::current()?.with_font();
             let manifest = export::Manifest::from_theme(&theme);
             write(out, render(format, &manifest)?)?;

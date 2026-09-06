@@ -1,5 +1,9 @@
 # omarchy-theme
 
+[![CI](https://github.com/londospark/omarchy-theme/actions/workflows/ci.yml/badge.svg)](https://github.com/londospark/omarchy-theme/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+
 Follow the Omarchy desktop theme from **any** app or toolkit: resolved
 palette (the exact cascade the desktop itself uses), shell style tokens
 (control-state alphas, border gradients, spacing, font scale), the UI font,
@@ -16,6 +20,13 @@ cargo test --workspace --features omarchy-theme/json
 ./examples/odin-abi/check.sh          # Odin bindings ≡ Rust CLI
 ./tests/check-zig.sh                  # Zig: native resolver ≡ vectors + zgui applies live
 ```
+
+## Agent skill
+
+This repo ships a [skill](skills/omarchy-theme/SKILL.md) (`skills/omarchy-theme/`)
+teaching coding agents (opencode, Claude Code, etc.) how to integrate the
+framework correctly — drop it in `.opencode/skills/`, `~/.agents/skills/`, or
+`~/.claude/skills/` of any project that should follow the desktop theme.
 
 ## Choose your integration
 

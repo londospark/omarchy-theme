@@ -93,7 +93,9 @@ fn deliver<Message: Send + From<ThemeChanged> + 'static>(
 /// debounced, with content-signature confirmation so half-states never
 /// fire. One thread per active subscription; the thread ends when the
 /// consumer (iced) drops the stream.
-fn spawn_delivery(tx: futures::channel::mpsc::UnboundedSender<()>) -> Result<(), omarchy_theme::Error> {
+fn spawn_delivery(
+    tx: futures::channel::mpsc::UnboundedSender<()>,
+) -> Result<(), omarchy_theme::Error> {
     let dir = omarchy_theme::current_state_dir()?;
     if !dir.is_dir() {
         return Err(omarchy_theme::Error::NoTheme);
@@ -106,7 +108,10 @@ fn spawn_delivery(tx: futures::channel::mpsc::UnboundedSender<()>) -> Result<(),
         };
         if inotify
             .watches()
-            .add(&dir, WatchMask::MOVED_TO | WatchMask::CREATE | WatchMask::DELETE)
+            .add(
+                &dir,
+                WatchMask::MOVED_TO | WatchMask::CREATE | WatchMask::DELETE,
+            )
             .is_err()
         {
             return;
@@ -117,7 +122,8 @@ fn spawn_delivery(tx: futures::channel::mpsc::UnboundedSender<()>) -> Result<(),
             match inotify.read_events_blocking(&mut buffer) {
                 Ok(_) => {
                     // Debounce the swap burst, then confirm via signature.
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_millis(150);
+                    let deadline =
+                        std::time::Instant::now() + std::time::Duration::from_millis(150);
                     while std::time::Instant::now() < deadline {
                         let _ = inotify.read_events(&mut buffer);
                         thread::sleep(std::time::Duration::from_millis(10));
@@ -148,7 +154,9 @@ mod tests {
     /// is exercised by the example.
     #[test]
     fn maps_live_theme() {
-        let Ok(theme) = omarchy_theme::Theme::current() else { return };
+        let Ok(theme) = omarchy_theme::Theme::current() else {
+            return;
+        };
         let t = to_theme(&theme);
         let name = format!("{:?}", t);
         assert!(name.contains("Omarchy"), "theme name: {name}");

@@ -91,7 +91,16 @@ impl Theme {
         };
         let style = Style::from_tokens(&tokens, &palette);
         let signature = Signature::capture(&dir)?;
-        Ok(Theme { name, palette, style, tokens, font: None, background, dir, signature })
+        Ok(Theme {
+            name,
+            palette,
+            style,
+            tokens,
+            font: None,
+            background,
+            dir,
+            signature,
+        })
     }
 
     /// Attach the fontconfig-resolved UI font (spawns `fc-match`).
@@ -163,7 +172,10 @@ impl Signature {
     /// Snapshot the observable identity of a staged theme directory. Public
     /// so stateless pollers can compare signatures without holding a `Theme`.
     pub fn capture(theme_dir: &Path) -> Result<Signature> {
-        let state_dir = theme_dir.parent().map(Path::to_path_buf).unwrap_or_default();
+        let state_dir = theme_dir
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_default();
         Ok(Signature {
             name_file: read_opt(&state_dir.join("theme.name")),
             colors: read_opt(&theme_dir.join("colors.toml")),
@@ -184,8 +196,8 @@ pub fn current_state_dir() -> Result<PathBuf> {
     let base = match std::env::var_os("XDG_STATE_HOME") {
         Some(v) if !v.is_empty() => PathBuf::from(v),
         _ => {
-            let home = std::env::var_os("HOME")
-                .ok_or_else(|| Error::Parse("HOME is unset".into()))?;
+            let home =
+                std::env::var_os("HOME").ok_or_else(|| Error::Parse("HOME is unset".into()))?;
             PathBuf::from(home).join(".local/state")
         }
     };

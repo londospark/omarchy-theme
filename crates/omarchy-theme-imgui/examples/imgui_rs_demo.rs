@@ -22,7 +22,6 @@ fn main() -> Result<(), omarchy_theme::Error> {
     };
     omarchy_theme_imgui::apply(ctx.style_mut(), &theme);
 
-
     ctx.io_mut().display_size = [128.0, 128.0];
     // build the default font atlas the way a renderer backend would
     ctx.fonts().build_rgba32_texture();
@@ -34,7 +33,8 @@ fn main() -> Result<(), omarchy_theme::Error> {
             println!("frame {i}: retinted to {:?}", theme.name);
         }
         let ui = ctx.frame();
-        let title = imgui::ImString::new(format!("themed by omarchy-theme {}", theme.palette.mode()));
+        let title =
+            imgui::ImString::new(format!("themed by omarchy-theme {}", theme.palette.mode()));
         ui.window(&title).build(|| {});
         ctx.render(); // no renderer attached; safe, we only exercise state
     }
@@ -47,6 +47,9 @@ fn main() -> Result<(), omarchy_theme::Error> {
         style[imgui::StyleColor::Text][2],
         theme.palette.color("foreground"),
     );
-    println!("theme followed: {}", theme.name.as_deref().unwrap_or("synthetic"));
+    println!(
+        "theme followed: {}",
+        theme.name.as_deref().unwrap_or("synthetic")
+    );
     Ok(())
 }

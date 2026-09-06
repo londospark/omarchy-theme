@@ -42,13 +42,22 @@ impl StyleTokens {
                 }
                 continue;
             }
-            let Some((key, value)) = t.split_once('=') else { continue };
+            let Some((key, value)) = t.split_once('=') else {
+                continue;
+            };
             let key = key.trim().to_string();
-            if key.is_empty() || !key.bytes().all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-' | b'.')) {
+            if key.is_empty()
+                || !key
+                    .bytes()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-' | b'.'))
+            {
                 continue;
             }
             let value = clean_value(value.trim());
-            sections.entry(current.clone()).or_default().insert(key, value);
+            sections
+                .entry(current.clone())
+                .or_default()
+                .insert(key, value);
         }
 
         let mut s = StyleTokens { sections };
@@ -65,7 +74,9 @@ impl StyleTokens {
             let snapshot = self.sections.clone();
             for entries in self.sections.values_mut() {
                 for value in entries.values_mut() {
-                    let Some((rsec, rkey)) = split_reference(value) else { continue };
+                    let Some((rsec, rkey)) = split_reference(value) else {
+                        continue;
+                    };
                     let Some(target) = snapshot.get(rsec).and_then(|m| m.get(rkey)) else {
                         continue;
                     };
@@ -140,8 +151,12 @@ fn split_reference(value: &str) -> Option<(&str, &str)> {
     if head.is_empty() || tail.is_empty() || tail.contains('.') {
         return None;
     }
-    if !head.bytes().all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
-        || !tail.bytes().all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
+    if !head
+        .bytes()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
+        || !tail
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'-'))
     {
         return None;
     }
@@ -181,13 +196,16 @@ fn split_top_level_tokens(value: &str) -> Vec<&str> {
 }
 
 fn clean_value(value: &str) -> String {
-    if value.starts_with('"') {
-        let inner = &value[1..];
+    if let Some(inner) = value.strip_prefix('"') {
         let end = inner.find('"').unwrap_or(inner.len());
         return inner[..end].to_string();
     }
     // bare value: drop trailing comment
-    let v = if let Some(pos) = value.find('#') { &value[..pos] } else { value };
+    let v = if let Some(pos) = value.find('#') {
+        &value[..pos]
+    } else {
+        value
+    };
     v.trim().to_string()
 }
 
@@ -306,10 +324,18 @@ impl Style {
                     .unwrap_or(1.0) as f32,
             })
         };
-        if let Some(v) = ctrl("normal") { s.normal = v; }
-        if let Some(v) = ctrl("hover-cursor") { s.hover = v; }
-        if let Some(v) = ctrl("focus") { s.focus = v; }
-        if let Some(v) = ctrl("selected") { s.selected = v; }
+        if let Some(v) = ctrl("normal") {
+            s.normal = v;
+        }
+        if let Some(v) = ctrl("hover-cursor") {
+            s.hover = v;
+        }
+        if let Some(v) = ctrl("focus") {
+            s.focus = v;
+        }
+        if let Some(v) = ctrl("selected") {
+            s.selected = v;
+        }
         s.pressed_fill_alpha = tokens
             .number("controls", "pressed-fill-alpha")
             .unwrap_or(0.22) as f32;

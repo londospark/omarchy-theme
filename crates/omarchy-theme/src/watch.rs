@@ -37,9 +37,7 @@ impl ThemeWatcher {
     /// Watch the live theme. `on_change` runs on the watcher thread: once
     /// immediately with the current theme, then again whenever a completed
     /// theme switch settles. Return false from the callback to stop.
-    pub fn spawn(
-        on_change: impl FnMut(&Theme) -> bool + Send + 'static,
-    ) -> Result<ThemeWatcher> {
+    pub fn spawn(on_change: impl FnMut(&Theme) -> bool + Send + 'static) -> Result<ThemeWatcher> {
         let dir = current_state_dir()?;
         Self::spawn_state_dir(&dir, on_change)
     }
@@ -57,17 +55,16 @@ impl ThemeWatcher {
         let theme = Theme::from_state_dir(dir)?;
 
         let (tx, rx) = mpsc::channel::<()>();
-        let mut watcher: RecommendedWatcher = notify::recommended_watcher(
-            move |ev: notify::Result<notify::Event>| {
+        let mut watcher: RecommendedWatcher =
+            notify::recommended_watcher(move |ev: notify::Result<notify::Event>| {
                 let Ok(ev) = ev else { return };
                 if !matches!(ev.kind, EventKind::Access(_)) {
                     let _ = tx.send(());
                 }
-            },
-        )
-        .map_err(|e| Error::Io(std::io::Error::other(e.to_string())))?;
+            })
+            .map_err(|e| Error::Io(std::io::Error::other(e.to_string())))?;
         watcher
-            .watch(&dir, notify::RecursiveMode::NonRecursive)
+            .watch(dir, notify::RecursiveMode::NonRecursive)
             .map_err(|e| Error::Io(std::io::Error::other(e.to_string())))?;
 
         if !on_change(&theme) {
@@ -120,7 +117,11 @@ impl ThemeWatcher {
             }
         });
 
-        Ok(ThemeWatcher { stop, handle: Some(handle), watcher: Some(watcher) })
+        Ok(ThemeWatcher {
+            stop,
+            handle: Some(handle),
+            watcher: Some(watcher),
+        })
     }
 
     /// Signal the thread to exit and join it (bounded by one tick).

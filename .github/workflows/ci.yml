@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (core, abi, cli, iced, imgui)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Format check
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-features --all-targets
+      - name: Test (unit + oracle conformance + watcher + goldens)
+        run: cargo test --workspace --features omarchy-theme/json
+      - name: Build release artifacts
+        run: cargo build --release -p omarchy-theme-abi -p omarchy-theme-cli
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: |
+            target/release/omarchy-theme
+            target/release/libomarchy_theme_abi.so
+            target/release/libomarchy_theme_abi.a
+
+  cpp:
+    name: C++ header + C ABI (Dear ImGui docking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vendor Dear ImGui (docking) headers/sources
+        run: |
+          mkdir -p build/imgui-vendor
+          for f in imgui.h imconfig.h imgui.cpp imgui_draw.cpp imgui_tables.cpp imgui_widgets.cpp imgui_internal.h imstb_rectpack.h imstb_textedit.h imstb_truetype.h; do
+            curl -sfL -o build/imgui-vendor/$f https://raw.githubusercontent.com/ocornut/imgui/docking/$f
+          done
+      - name: Build C ABI library (cargo)
+        run: cargo build --release -p omarchy-theme-abi
+      - name: Synthesize a staged theme (contract §1) so runtime paths execute
+        run: |
+          state=$PWD/build/ci-state/omarchy/current
+          mkdir -p $state/theme
+          cp conformance/vectors/catppuccin.colors.toml $state/theme/colors.toml
+          printf 'catppuccin\n' > $state/theme.name
+          echo "XDG_STATE_HOME=$PWD/build/ci-state" >> "$GITHUB_ENV"
+      - name: C++ resolver parity vs oracle vectors
+        run: ./tests/check-parity.sh
+      - name: C header + ABI smoke (live path)
+        run: ./tests/check-c.sh
+      - name: ImGui runtime smoke (style == palette, real context)
+        run: ./examples/imgui-cpp/build.sh test
+
+  zig:
+    name: Zig bindings + zgui validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+      - name: Build C ABI library (cargo)
+        run: cargo build --release -p omarchy-theme-abi
+      - name: Synthesize staged theme + zig jobs
+        run: |
+          state=$PWD/build/ci-state/omarchy/current
+          mkdir -p $state/theme
+          cp conformance/vectors/catppuccin.colors.toml $state/theme/colors.toml
+          printf 'catppuccin\n' > $state/theme.name
+          export XDG_STATE_HOME=$PWD/build/ci-state
+          zig build-exe examples/zig-conformance/omarchy_native.zig \
+            -lc -fllvm -flld -OReleaseFast -femit-bin=build/zig-native
+          ./build/zig-native --conformance conformance/vectors | tail -1
+          cd examples/zgui-verify && zig build && ./zig-out/bin/zgui-verify
+
+  odin:
+    name: Odin bindings + native resolver
+    runs-on: ubuntu-latest
+    continue-on-error: true  # tracking upstream nightly syntax churn
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Odin nightly
+        run: |
+          url=$(curl -sf https://api.github.com/repos/odin-lang/Odin/releases/tags/nightly \
+            | jq -r '.assets[] | select(.name | test("linux.*(amd64|x86_64)")) | .browser_download_url' | head -1)
+          test -n "$url"
+          curl -sfL "$url" -o /tmp/odin.tgz
+          mkdir -p ~/odin && tar xzf /tmp/odin.tgz -C ~/odin --strip-components=1
+          echo "$HOME/odin" >> "$GITHUB_PATH"
+      - name: Build C ABI library
+        run: cargo build --release -p omarchy-theme-abi
+      - name: Synthesize staged theme (contract §1)
+        run: |
+          state=$PWD/build/ci-state/omarchy/current
+          mkdir -p $state/theme
+          cp conformance/vectors/catppuccin.colors.toml $state/theme/colors.toml
+          printf 'catppuccin\n' > $state/theme.name
+          echo "XDG_STATE_HOME=$PWD/build/ci-state" >> "$GITHUB_ENV"
+      - name: Native resolver vs vectors
+        run: |
+          odin build examples/odin-conformance -o:none -out:build/odin-native
+          ./build/odin-native --conformance conformance/vectors | tail -1
+      - name: ABI bindings vs Rust CLI
+        run: ./examples/odin-abi/check.sh | tail -1

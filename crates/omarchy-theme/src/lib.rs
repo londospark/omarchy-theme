@@ -24,18 +24,18 @@
 //! installed theme.
 
 pub mod color;
-pub mod export;
-pub mod imgui_recipe;
 pub mod error;
+pub mod export;
 pub mod font;
+pub mod imgui_recipe;
 pub mod palette;
 pub mod style;
 pub mod theme;
 pub mod watch;
 
 pub use color::Rgba;
-pub use export::Manifest;
 pub use error::{Error, Result};
+pub use export::Manifest;
 pub use font::Font;
 pub use palette::Palette;
 pub use style::{Style, StyleTokens, Surface};

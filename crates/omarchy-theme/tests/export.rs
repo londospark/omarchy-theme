@@ -87,7 +87,9 @@ fn imgui_hpp_names_and_ranges() {
     assert!(h.contains("style.Colors[ImGuiCol_TextSelectedBg] ="));
     assert!(h.contains("style.Colors[ImGuiCol_Tab] ="));
     // alpha-0 entries: transparent ChildBg stays exactly transparent
-    assert!(h.contains("style.Colors[ImGuiCol_ChildBg] = ImVec4(0.000000f, 0.000000f, 0.000000f, 0.000000f);"));
+    assert!(h.contains(
+        "style.Colors[ImGuiCol_ChildBg] = ImVec4(0.000000f, 0.000000f, 0.000000f, 0.000000f);"
+    ));
     // scalars
     assert!(h.contains("style.WindowRounding = 0.0000f;"));
     for line in h.lines().filter(|l| l.contains("ImVec4(")) {
