@@ -1,0 +1,25 @@
+name: Release binaries
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release -p omarchy-theme-cli -p omarchy-theme-abi
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp target/release/omarchy-theme target/release/libomarchy_theme_abi.* dist/
+          cp bindings/c/omarchy_theme.h dist/
+          tar czf omarchy-theme-linux-x86_64.tar.gz -C dist .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: omarchy-theme-linux-x86_64.tar.gz
