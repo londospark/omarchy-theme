@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# omarchy-theme-gen — theme-set.d hook: regenerate export files whenever the
+# desktop theme changes, for apps that consume generated files instead of a
+# runtime library.
+#
+# Install:
+#   omarchy hook install theme-set ~/Work/omarchy-theme/hook/omarchy-theme-gen
+# Remove:
+#   rm ~/.config/omarchy/hooks/theme-set.d/omarchy-theme-gen
+#
+# Files land in ~/.local/state/omarchy-theme/ (override: $OMARCHY_THEME_EXPORT_DIR).
+# Receives the snake-cased theme slug as $1 (per omarchy hook contract); we
+# ignore it and re-export the live theme, which is simpler and always current.
+
+set -euo pipefail
+
+EXPORT_DIR="${OMARCHY_THEME_EXPORT_DIR:-$HOME/.local/state/omarchy-theme}"
+
+OMARCHY_THEME=$(command -v omarchy-theme || true)
+if [[ -z $OMARCHY_THEME ]]; then
+  # common dev checkout location takes over if not installed on PATH
+  if [[ -x $HOME/Work/omarchy-theme/target/release/omarchy-theme ]]; then
+    OMARCHY_THEME=$HOME/Work/omarchy-theme/target/release/omarchy-theme
+  else
+    exit 0 # framework not installed; stay silent in the hook chain
+  fi
+fi
+
+mkdir -p "$EXPORT_DIR"
+"$OMARCHY_THEME" export --format json      --out "$EXPORT_DIR/theme.json"
+"$OMARCHY_THEME" export --format css       --out "$EXPORT_DIR/theme.css"
+"$OMARCHY_THEME" export --format toml      --out "$EXPORT_DIR/theme.toml"
+"$OMARCHY_THEME" export --format imgui.hpp --out "$EXPORT_DIR/theme_imgui.hpp"
+"$OMARCHY_THEME" export --format c-header  --out "$EXPORT_DIR/theme_colors.h"

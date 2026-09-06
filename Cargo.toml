@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/omarchy-theme",
+    "crates/omarchy-theme-abi",
+    "crates/omarchy-theme-cli",
+    "crates/omarchy-theme-iced",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT"
+repository = "https://github.com/londospark/omarchy-theme"
+description = "Follow the Omarchy desktop theme: palette, style tokens, fonts, and live theme-change detection"
+
+[workspace.dependencies]
+omarchy-theme = { path = "crates/omarchy-theme", version = "0.1.0" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+notify = "8"
+
+[profile.release]
+lto = true

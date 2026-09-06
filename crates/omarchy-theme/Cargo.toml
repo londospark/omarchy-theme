@@ -1,0 +1,28 @@
+[package]
+name = "omarchy-theme"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Resolve the active Omarchy desktop theme: palette, style tokens, fonts, and live theme-change detection"
+keywords = ["omarchy", "theme", "palette", "hyprland", "imgui"]
+categories = ["gui", "os"]
+
+[dependencies]
+notify = { workspace = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[[test]]
+name = "export"
+required-features = ["json"]
+
+[features]
+default = []
+serde = ["dep:serde"]
+json = ["dep:serde_json", "serde"]
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
