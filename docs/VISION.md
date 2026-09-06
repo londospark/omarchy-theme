@@ -67,9 +67,10 @@ language.
 | C / anything with a C ABI | `bindings/c/omarchy_theme.h` | ✅ v1, smoke-tested |
 | Web / Tauri / Electron | `--format css` + theme-set hook | ✅ v1 |
 | Config-file apps | `--format toml/json/c-header`, `watch --`, hook | ✅ v1 |
+| Dear ImGui (imgui-rs) | `omarchy-theme-imgui` crate (mapping v1, Context style) | ✅ v1, tested |
 | egui | `omarchy-theme-egui` crate (Visuals mapping) | planned v0.2 |
 | Qt (QSS palette), Slint, GTK4 | export + adapters | planned |
-| Odin imgui-rs-style wrappers | examples | planned |
+| Odin imgui-style wrappers | examples (Schema-Spelunker recipe) | ✅ v1 |
 
 ## Relationship to existing crates
 

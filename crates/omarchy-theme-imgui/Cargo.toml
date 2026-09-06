@@ -1,0 +1,11 @@
+[package]
+name = "omarchy-theme-imgui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Dear ImGui (imgui-rs) adapter for omarchy-theme: apply the mapping v1 recipe to an imgui Context/style"
+
+[dependencies]
+omarchy-theme = { workspace = true }
+imgui = "0.12"

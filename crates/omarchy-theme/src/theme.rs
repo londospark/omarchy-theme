@@ -62,6 +62,24 @@ impl Theme {
         Self::load(dir, None, None)
     }
 
+    /// A theme composed directly from an already-resolved palette — for
+    /// tests, previews, and embedders that resolve elsewhere. No live state
+    /// dir attached, so `changed()` is always false.
+    pub fn from_palette(palette: Palette) -> Theme {
+        let tokens = StyleTokens::default();
+        let style = Style::from_tokens(&tokens, &palette);
+        Theme {
+            name: None,
+            palette,
+            style,
+            tokens,
+            font: None,
+            background: None,
+            dir: PathBuf::new(),
+            signature: Signature::default(),
+        }
+    }
+
     fn load(dir: PathBuf, name: Option<String>, background: Option<PathBuf>) -> Result<Theme> {
         let colors_path = dir.join("colors.toml");
         let raw = fs::read_to_string(&colors_path)?;

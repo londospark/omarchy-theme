@@ -22,7 +22,8 @@ cargo test --workspace --features omarchy-theme/json
 |---|---|---|
 | C++ Dear ImGui app | [`include/omarchy/imgui.hpp`](include/omarchy/imgui.hpp) | `AutoApply(style)` per frame |
 | Odin app (any FFI GUI) | [`bindings/odin/omarchy_theme`](bindings/odin/omarchy_theme) or the native recipe in [`examples/schema-spelunker`](examples/schema-spelunker) | poll `changed()` / signature |
-| Rust egui/imgui-rs | `omarchy-theme` crate, poll or `ThemeWatcher` | `theme.changed()` / watcher |
+| Rust Dear ImGui (imgui-rs) | [`crates/omarchy-theme-imgui`](crates/omarchy-theme-imgui) | `theme.changed()` per frame |
+| Rust egui | `omarchy-theme` core + adapter (planned v0.2) | — |
 | Rust iced | [`crates/omarchy-theme-iced`](crates/omarchy-theme-iced) | `subscription()` |
 | raylib (C or Odin) | [`bindings/raylib/omarchy_raylib.h`](bindings/raylib/omarchy_raylib.h) | `omarchy_rl_update(&t)` per frame |
 | Zig / Go / C# / anything with C FFI | [`bindings/c/omarchy_theme.h`](bindings/c/omarchy_theme.h) → cdylib | `omarchy_theme_changed()` |
@@ -42,14 +43,18 @@ while (running) {
 }
 ```
 
-**Rust**
+**Rust (core + imgui-rs)**
 
 ```rust
 let mut theme = omarchy_theme::Theme::current()?.with_font();
-apply_to_my_toolkit(&theme);
+let mut ctx = imgui::Context::create();
+omarchy_theme_imgui::apply(ctx.style_mut(), &theme);
 loop {
-    if theme.changed() { theme.reload()?; apply_to_my_toolkit(&theme); }
-    // or push-tier: ThemeWatcher::spawn(|t| { channel.send(t.clone()); true })
+    if theme.changed() {
+        theme.reload()?;
+        omarchy_theme_imgui::apply(ctx.style_mut(), &theme);
+    }
+    // push-tier alternative: ThemeWatcher::spawn(|t| { tx.send(t); true })
 }
 ```
 
@@ -103,6 +108,7 @@ docs/VISION.md           framework thesis + adapter roadmap
 conformance/             generate.sh + vectors/<theme>.json (oracle test data)
 crates/
   omarchy-theme/         Rust core: Palette · Style · Font · Theme · ThemeWatcher
+  omarchy-theme-imgui/   imgui-rs adapter (mapping v1)
   omarchy-theme-abi/     C ABI cdylib/staticlib (POD OmarchyTheme, poll+get)
   omarchy-theme-cli/     `omarchy-theme` binary: current|list|export|watch
   omarchy-theme-iced/    iced adapter (to_theme + subscription)
