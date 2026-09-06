@@ -87,13 +87,13 @@ jobs:
     continue-on-error: true  # tracking upstream nightly syntax churn
     steps:
       - uses: actions/checkout@v4
-      - name: Install Odin nightly
+      - name: Install Odin (latest monthly dev release)
         run: |
-          url=$(curl -sf https://api.github.com/repos/odin-lang/Odin/releases/tags/nightly \
-            | jq -r '.assets[] | select(.name | test("linux.*(amd64|x86_64)")) | .browser_download_url' | head -1)
+          url=$(curl -sf https://api.github.com/repos/odin-lang/Odin/releases/latest \
+            | jq -r '.assets[] | select(.name | test("linux-amd64")) | .browser_download_url' | head -1)
           test -n "$url"
           curl -sfL "$url" -o /tmp/odin.tgz
-          mkdir -p ~/odin && tar xzf /tmp/odin.tgz -C ~/odin --strip-components=1
+          mkdir -p ~/odin && tar xzf /tmp/odin.tgz -C ~/odin
           echo "$HOME/odin" >> "$GITHUB_PATH"
       - name: Build C ABI library
         run: cargo build --release -p omarchy-theme-abi
