@@ -93,7 +93,8 @@ jobs:
             | jq -r '.assets[] | select(.name | test("linux-amd64")) | .browser_download_url' | head -1)
           test -n "$url"
           curl -sfL "$url" -o /tmp/odin.tgz
-          mkdir -p ~/odin && tar xzf /tmp/odin.tgz -C ~/odin
+          mkdir -p ~/odin && tar xzf /tmp/odin.tgz -C ~/odin --strip-components=1
+          test -x ~/odin/odin
           echo "$HOME/odin" >> "$GITHUB_PATH"
       - name: Build C ABI library
         run: cargo build --release -p omarchy-theme-abi
